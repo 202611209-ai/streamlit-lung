@@ -8,28 +8,29 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
 # =========================================================================
-# 🔥 깃허브 폰트 파일 안전 연동 로직 (경로 보완 버전)
+# 🔥 [인증서 에러 절대 안 남] 깃허브 업로드 폰트 강제 주입 로직
 # =========================================================================
-# 현재 파일(lung_app.py)이 있는 폴더를 기준으로 폰트 파일 경로를 찾습니다.
+# 현재 파일(lung_app.py) 위치를 기준으로 폰트 경로를 절대 경로로 잡습니다.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 font_name = "MalgunGothic.ttf"
-font_path = os.path.join(current_dir, font_name)
+font_path = os.path.normpath(os.path.join(current_dir, font_name))
 
-# 깃허브 서버에 파일이 실제로 존재하는지 엄격하게 체크 후 등록
+# 인터넷 다운로드(urllib)를 절대 쓰지 않고 내 깃허브 파일에서 바로 읽습니다.
 if os.path.exists(font_path):
     try:
+        # 시스템 캐시 메모리를 거치지 않고 Matplotlib 엔진에 직접 등록합니다.
+        font_prop = fm.FontProperties(fname=font_path)
         fm.fontManager.addfont(font_path)
-        prop = fm.FontProperties(fname=font_path)
-        plt.rc('font', family=prop.get_name())
+        plt.rcParams['font.family'] = font_prop.get_name()
     except Exception as e:
-        # 폰트 등록 중 에러가 나면 기본 폰트로 안전하게 우회
+        # 만약의 상황을 대비한 예외 처리 우회
         plt.rc('font', family='sans-serif')
 else:
-    # 폰트 파일이 없을 경우 웹 페이지에 경고창을 띄워줍니다.
-    st.warning(f"⚠️ 깃허브 저장소에 '{font_name}' 파일이 보이지 않습니다. 파일이 올바른 위치에 있는지 확인해 주세요.")
+    # 파일이 진짜 없을 때만 사이트에 경고창을 표시합니다.
+    st.error(f"❌ 깃허브 폴더 안에 '{font_name}' 파일이 진짜로 없습니다! 파일이 제대로 업로드되었는지 확인해 주세요.")
     plt.rc('font', family='sans-serif')
 
-# 그래프에서 마이너스(-) 기호가 깨지는 현상 방지
+# 그래프 내 마이너스 기호 깨짐 예방
 plt.rcParams['axes.unicode_minus'] = False
 # =========================================================================
 
@@ -73,7 +74,7 @@ if data is None:
     st.error("⚠️ 'lung.csv' 파일을 찾을 수 없습니다. GitHub 저장소에 파일이 올바르게 업로드되었는지 확인해 주세요.")
     st.stop()
 
-# 3. 사이드바 UI
+# 3. 사이드바 UI 구성
 st.sidebar.header("📊 새로운 환자 정보 입력")
 
 user_inputs = {}
@@ -89,12 +90,11 @@ with col1:
 with col2:
     y_axis = st.selectbox("Y축 선택 (세로 축)", options=X_features.columns, index=3)
 
-# 4. 예측 결과 도출
+# 4. 예측 결과 도출 및 위험도 매칭
 new_patient = pd.DataFrame([user_inputs])
 new_patient_scaled = scaler.transform(new_patient)
 predicted_cluster = kmeans.predict(new_patient_scaled)[0]
 
-# 위험도 설명 구조
 cluster_details = {
     0: {
         "title": "🚨 고위험군 (군집 0)",
@@ -123,7 +123,7 @@ elif cluster_info["type"] == "warning":
 else:
     st.success(f"**{cluster_info['title']}** 에 속합니다.\n\n{cluster_info['description']}")
 
-# 5. 그래프 그리기
+# 5. 분산형 그래프 생성 및 출력
 fig, ax = plt.subplots(figsize=(10, 5))
 colors = {0: '#ff4b4b', 1: '#ffa500', 2: '#00b050'}
 
