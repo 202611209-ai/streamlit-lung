@@ -8,29 +8,27 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
 # =========================================================================
-# 🔥 [인증서 에러 절대 안 남] 깃허브 업로드 폰트 강제 주입 로직
+# 🔥 [나눔고딕 버전] 깃허브 파일 직접 로드 및 강제 주입 로직
 # =========================================================================
-# 현재 파일(lung_app.py) 위치를 기준으로 폰트 경로를 절대 경로로 잡습니다.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-font_name = "MalgunGothic.ttf"
+# 깃허브에 올리신 파일명인 'NanumGothic.ttf'로 정확하게 매칭합니다.
+font_name = "NanumGothic.ttf"
 font_path = os.path.normpath(os.path.join(current_dir, font_name))
 
-# 인터넷 다운로드(urllib)를 절대 쓰지 않고 내 깃허브 파일에서 바로 읽습니다.
 if os.path.exists(font_path):
     try:
-        # 시스템 캐시 메모리를 거치지 않고 Matplotlib 엔진에 직접 등록합니다.
+        # 폰트 파일 속성 읽기 및 Matplotlib 전역 등록
         font_prop = fm.FontProperties(fname=font_path)
         fm.fontManager.addfont(font_path)
         plt.rcParams['font.family'] = font_prop.get_name()
     except Exception as e:
-        # 만약의 상황을 대비한 예외 처리 우회
         plt.rc('font', family='sans-serif')
 else:
-    # 파일이 진짜 없을 때만 사이트에 경고창을 표시합니다.
-    st.error(f"❌ 깃허브 폴더 안에 '{font_name}' 파일이 진짜로 없습니다! 파일이 제대로 업로드되었는지 확인해 주세요.")
+    # 파일명이 다르거나 없을 때만 경고창을 띄웁니다.
+    st.error(f"❌ 깃허브 폴더 안에 '{font_name}' 파일이 존재하지 않습니다! 파일명 대소문자를 다시 확인해 주세요.")
     plt.rc('font', family='sans-serif')
 
-# 그래프 내 마이너스 기호 깨짐 예방
+# 그래프 내 마이너스 기호 깨짐 방지
 plt.rcParams['axes.unicode_minus'] = False
 # =========================================================================
 
@@ -123,7 +121,7 @@ elif cluster_info["type"] == "warning":
 else:
     st.success(f"**{cluster_info['title']}** 에 속합니다.\n\n{cluster_info['description']}")
 
-# 5. 분산형 그래프 생성 및 출력
+# 5. 그래프 그리기
 fig, ax = plt.subplots(figsize=(10, 5))
 colors = {0: '#ff4b4b', 1: '#ffa500', 2: '#00b050'}
 
