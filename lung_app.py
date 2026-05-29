@@ -14,7 +14,22 @@ st.set_page_config(page_title="폐암 환자 군집 분석", layout="wide")
 # 제목 및 설명
 st.title("🫁 폐암 환자 데이터 군집 분석 및 새로운 환자 위치 시각화")
 st.write("왼쪽 사이드바에서 환자의 정보를 입력하면, 군집 분석 결과 그래프에 환자의 위치가 실시간으로 표시됩니다.")
+font_name = "MalgunGothic.ttf" 
 
+if os.path.exists(font_name):
+    # 깃허브 서버(리눅스) 환경일 때: 내 폴더의 폰트 파일을 직접 등록
+    fm.fontManager.addfont(font_name)
+    prop = fm.FontProperties(fname=font_name)
+    plt.rc('font', family=prop.get_name())
+else:
+    # 혹시나 파일이 없을 때를 대비한 기본 설정
+    plt.rc('font', family='sans-serif')
+
+# 그래프에서 마이너스(-) 기호가 깨지는 현상 방지
+plt.rcParams['axes.unicode_minus'] = False
+# =========================================================================
+
+st.set_page_config(page_title="폐암 환자 군집 분석", layout="wide")
 # 2. 데이터 로드 및 모델 학습 (페이지 구동 시 자동 실행)
 @st.cache_data
 def load_and_train():
